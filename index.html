@@ -128,13 +128,7 @@
       loadingDiv.style.display = 'block'; // Show loading
       playlistElement.innerHTML = ''; // Clear previous results
 
-      const prompt = `Generate a playlist of 10 songs based on the following description: "${userDescription}". Provide the songs in a strictly numbered list format, where each item is in the form "1. Song Name, Artist". Ensure that each number is a single integer followed by a dot and a space. Do not include any additional text, descriptions, or explanations. Only provide the numbered list from 1 to 10.
-
-Example:
-1. "Song One", Artist A
-2. "Song Two", Artist B
-...
-10. "Song Ten", Artist J`;
+      const prompt = `Generate a playlist of 10 songs based on the following description: "${userDescription}". Provide the songs in a strictly numbered list format, where each item is in the form "1. Song Name, Artist". Ensure that each number is a single integer followed by a dot and a space. Do not include any additional text, descriptions, or explanations. Only provide the numbered list from 1 to 10.`;
 
       const params = {
         prompt: prompt,
