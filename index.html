@@ -8,13 +8,6 @@
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css"
   />
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
   <style>
     body {
       display: flex;
@@ -26,21 +19,20 @@
     }
 
     .playlist-container {
-      width: 100%;
-      max-width: 600px;
+      width: 90%;
+      max-width: 500px;
       border: 1px solid #ddd;
       border-radius: 8px;
       padding: 20px;
       background-color: #fff;
       display: flex;
       flex-direction: column;
-      height: 80vh;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
     .playlist-header {
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }
 
     .playlist-header h1 {
@@ -49,30 +41,10 @@
       color: #333;
     }
 
-    #playlistWindow {
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 20px;
-      padding-right: 10px;
-    }
-
-    .playlist-description {
-      margin-bottom: 15px;
-      font-weight: bold;
-    }
-
-    .playlist-songs {
-      list-style-type: decimal;
-      padding-left: 20px;
-    }
-
-    .playlist-songs li {
-      margin-bottom: 10px;
-    }
-
     .input-area {
       display: flex;
       align-items: center;
+      margin-bottom: 20px;
     }
 
     #descriptionInput {
@@ -102,22 +74,26 @@
       cursor: not-allowed;
     }
 
-    .loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    #playlistWindow {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .playlist-description {
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    .playlist-songs {
+      list-style-type: decimal;
+      padding-left: 20px;
+    }
+
+    .playlist-songs li {
       margin-bottom: 10px;
-    }
-
-    .loading i {
-      font-size: 24px;
-      animation: spin 2s linear infinite;
-      color: #4caf50;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      color: #333;
     }
   </style>
 </head>
@@ -128,17 +104,13 @@
       <h1>Song Playlist Generator</h1>
     </div>
 
-    <div id="playlistWindow">
-      <!-- User description and playlist will appear here -->
-    </div>
-
-    <div id="loadingIndicator" class="loading" hidden>
-      <i class="fas fa-spinner"></i>
-    </div>
-
     <div class="input-area">
       <input type="text" id="descriptionInput" placeholder="Enter your description..." />
       <button id="generateBtn" disabled>Generate Playlist</button>
+    </div>
+
+    <div id="playlistWindow">
+      <!-- User description and playlist will appear here -->
     </div>
   </div>
 
@@ -148,11 +120,10 @@
     let LLMEngine;
 
     const playlistWindow = document.getElementById('playlistWindow');
-    const loadingIndicator = document.getElementById('loadingIndicator');
     const generateButton = document.getElementById('generateBtn');
     const descriptionInput = document.getElementById('descriptionInput');
 
-    // Initial state: Load the model when the page loads
+    // Load the model when the page loads
     window.addEventListener('DOMContentLoaded', () => {
       loadModel();
     });
@@ -182,8 +153,13 @@
     }
 
     function showLoading(show) {
-      loadingIndicator.hidden = !show;
       generateButton.disabled = show || !descriptionInput.value.trim();
+      descriptionInput.disabled = show;
+      if (show) {
+        generateButton.textContent = 'Generating...';
+      } else {
+        generateButton.textContent = 'Generate Playlist';
+      }
     }
 
     function loadModel() {
@@ -207,9 +183,8 @@
 
     function onModelLoaded() {
       showLoading(false);
-      descriptionInput.disabled = false;
       generateButton.disabled = !descriptionInput.value.trim();
-      // Optionally, you can display a message indicating the model is ready
+      // Optionally, display a welcome message
       // appendPlaylist('Model loaded. Enter a description to generate a playlist.', []);
     }
 
@@ -229,14 +204,14 @@
 
     function onRunComplete() {
       showLoading(false);
-      generateButton.disabled = false;
+      generateButton.disabled = !descriptionInput.value.trim();
 
       // Process the accumulated response
       const response = LLMEngine.response.join('\n').trim();
-      const songs = response.split('\n').map(song => song.replace(/^\d+\.\s*/, '').trim()).filter(song => song);
+      // Extract song titles assuming they are listed line by line
+      const songs = response.split('\n').map(song => song.trim()).filter(song => song);
 
-      const userDescription = descriptionInput.value.trim();
-      appendPlaylist(userDescription, songs.slice(0, 10)); // Ensure only 10 songs are displayed
+      appendPlaylist(descriptionInput.value.trim(), songs.slice(0, 10)); // Ensure only 10 songs are displayed
 
       // Reset the response
       LLMEngine.response = [];
@@ -247,14 +222,12 @@
       if (userDescription === "") return;
 
       showLoading(true);
-      generateButton.disabled = true;
-      descriptionInput.disabled = true;
 
       // Clear previous playlist
       playlistWindow.innerHTML = '';
 
       // Prepare the prompt
-      const prompt = `Generate a list of 10 song titles based on the following description:\n\n"${userDescription}"\n\nList the songs numbered from 1 to 10.`;
+      const prompt = `Generate a list of 10 song titles based on the following description:\n\n"${userDescription}"\n\nList the songs as separate lines without numbering or additional text.`;
 
       const params = {
         prompt: prompt,
@@ -268,10 +241,10 @@
 
     // Enable generate button when input is not empty
     descriptionInput.addEventListener('input', () => {
-      generateButton.disabled = !descriptionInput.value.trim() || LLMEngine.isRunning;
+      generateButton.disabled = !descriptionInput.value.trim() || (LLMEngine && LLMEngine.isRunning);
     });
 
-    // Enable sending message on Enter key
+    // Enable generating playlist on Enter key
     descriptionInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter' && !generateButton.disabled) {
         generateButton.click();
