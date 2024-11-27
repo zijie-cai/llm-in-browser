@@ -8,13 +8,6 @@
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css"
   />
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
   <style>
     body {
       display: flex;
@@ -97,22 +90,11 @@
       cursor: not-allowed;
     }
 
-    .loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    .status-message {
+      text-align: center;
       margin-bottom: 10px;
-    }
-
-    .loading i {
-      font-size: 24px;
-      animation: spin 2s linear infinite;
-      color: #4caf50;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      color: #555;
+      font-style: italic;
     }
   </style>
 </head>
@@ -123,8 +105,8 @@
       <!-- Chat messages will appear here -->
     </div>
 
-    <div id="loadingIndicator" class="loading" hidden>
-      <i class="fas fa-spinner"></i>
+    <div id="statusMessage" class="status-message">
+      Loading model, please wait...
     </div>
 
     <div class="input-area">
@@ -139,15 +121,14 @@
     let LLMEngine;
 
     const chatWindow = document.getElementById('chatWindow');
-    const loadingIndicator = document.getElementById('loadingIndicator');
+    const statusMessage = document.getElementById('statusMessage');
     const sendButton = document.getElementById('sendBtn');
     const textInput = document.getElementById('textInput');
 
     // Initial message from assistant
     appendMessage('assistant', 'Hello! I am your assistant. How can I help you today?');
 
-    // Show loading indicator and load the model
-    showLoading(true);
+    // Load the model
     loadModel();
 
     function appendMessage(sender, message) {
@@ -163,8 +144,9 @@
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
-    function showLoading(show) {
-      loadingIndicator.hidden = !show;
+    function updateStatus(message) {
+      statusMessage.textContent = message;
+      statusMessage.style.display = message ? 'block' : 'none';
     }
 
     function loadModel() {
@@ -181,11 +163,12 @@
         onRunComplete
       );
 
+      updateStatus('Loading model, please wait...');
       LLMEngine.load_worker();
     }
 
     function onModelLoaded() {
-      showLoading(false);
+      updateStatus('');
       sendButton.disabled = false;
       textInput.disabled = false;
     }
@@ -195,7 +178,6 @@
     }
 
     function onRunComplete() {
-      showLoading(false);
       sendButton.disabled = false;
       textInput.disabled = false;
     }
@@ -208,11 +190,11 @@
       textInput.value = "";
       sendButton.disabled = true;
       textInput.disabled = true;
-      showLoading(true);
+      updateStatus('Processing your message...');
 
       const params = {
         prompt: userInput,
-        max_token_len: 100,
+        max_token_len: 200,
         top_k: 1
       };
 
