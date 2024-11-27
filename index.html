@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LLM Chat Interface</title>
+  <title>Minimal LLM Chat Interface</title>
   <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css"
@@ -22,7 +22,6 @@
       align-items: center;
       height: 100vh;
       background-color: #f5f5f5;
-      margin: 0;
     }
 
     .chat-container {
@@ -35,18 +34,6 @@
       display: flex;
       flex-direction: column;
       height: 80vh;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .chat-header {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .chat-header h1 {
-      margin: 0;
-      font-size: 24px;
-      color: #333;
     }
 
     #chatWindow {
@@ -73,17 +60,14 @@
       padding: 10px 15px;
       border-radius: 20px;
       max-width: 80%;
-      word-wrap: break-word;
     }
 
     .message.user .content {
       background-color: #dcf8c6;
-      color: #000;
     }
 
     .message.assistant .content {
       background-color: #f1f0f0;
-      color: #000;
     }
 
     .input-area {
@@ -106,11 +90,6 @@
       background-color: #4caf50;
       color: white;
       cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    #sendBtn:hover:not(:disabled) {
-      background-color: #45a049;
     }
 
     #sendBtn:disabled {
@@ -135,32 +114,17 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
-    .status-message {
-      text-align: center;
-      margin-bottom: 10px;
-      color: #555;
-      font-style: italic;
-    }
   </style>
 </head>
 <body>
 
   <div class="chat-container">
-    <div class="chat-header">
-      <h1>LLM Chat Interface</h1>
-    </div>
-
     <div id="chatWindow">
       <!-- Chat messages will appear here -->
     </div>
 
     <div id="loadingIndicator" class="loading" hidden>
       <i class="fas fa-spinner"></i>
-    </div>
-
-    <div id="statusMessage" class="status-message">
-      Loading model, please wait...
     </div>
 
     <div class="input-area">
@@ -176,14 +140,14 @@
 
     const chatWindow = document.getElementById('chatWindow');
     const loadingIndicator = document.getElementById('loadingIndicator');
-    const statusMessage = document.getElementById('statusMessage');
     const sendButton = document.getElementById('sendBtn');
     const textInput = document.getElementById('textInput');
 
     // Initial message from assistant
     appendMessage('assistant', 'Hello! I am your assistant. How can I help you today?');
 
-    // Load the model
+    // Show loading indicator and load the model
+    showLoading(true);
     loadModel();
 
     function appendMessage(sender, message) {
@@ -201,8 +165,6 @@
 
     function showLoading(show) {
       loadingIndicator.hidden = !show;
-      statusMessage.textContent = show ? (LLMEngine && LLMEngine.isModelLoading ? 'Loading model, please wait...' : 'Processing your message...') : '';
-      statusMessage.style.display = show ? 'block' : 'none';
     }
 
     function loadModel() {
@@ -216,11 +178,9 @@
         modelInfo.model,
         onModelLoaded,
         onMessageReceived,
-        onRunComplete,
-        onModelLoadError
+        onRunComplete
       );
 
-      showLoading(true);
       LLMEngine.load_worker();
     }
 
@@ -228,14 +188,6 @@
       showLoading(false);
       sendButton.disabled = false;
       textInput.disabled = false;
-      appendMessage('assistant', 'Model loaded successfully. You can start chatting now!');
-    }
-
-    function onModelLoadError(error) {
-      showLoading(false);
-      statusMessage.textContent = 'Failed to load the model. Please try again later.';
-      statusMessage.style.display = 'block';
-      console.error('Model Load Error:', error);
     }
 
     function onMessageReceived(line) {
