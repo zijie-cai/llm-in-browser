@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Minimal LLM Chat Interface</title>
+  <title>Playlist Generator</title>
   <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css"
@@ -22,9 +22,10 @@
       align-items: center;
       height: 100vh;
       background-color: #f5f5f5;
+      margin: 0;
     }
 
-    .chat-container {
+    .app-container {
       width: 100%;
       max-width: 600px;
       border: 1px solid #ddd;
@@ -34,52 +35,21 @@
       display: flex;
       flex-direction: column;
       height: 80vh;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
-    .chat-header {
+    .header {
       text-align: center;
       margin-bottom: 20px;
-    }
-
-    #chatWindow {
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 20px;
-      padding-right: 10px;
-    }
-
-    .message {
-      margin-bottom: 15px;
-    }
-
-    .message.user {
-      text-align: right;
-    }
-
-    .message.assistant {
-      text-align: left;
-    }
-
-    .message .content {
-      display: inline-block;
-      padding: 10px 15px;
-      border-radius: 20px;
-      max-width: 80%;
-      word-wrap: break-word;
-    }
-
-    .message.user .content {
-      background-color: #dcf8c6;
-    }
-
-    .message.assistant .content {
-      background-color: #f1f0f0;
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #333;
     }
 
     .input-area {
       display: flex;
       align-items: center;
+      margin-bottom: 20px;
     }
 
     #textInput {
@@ -88,6 +58,8 @@
       border-radius: 20px;
       border: 1px solid #ccc;
       margin-right: 10px;
+      outline: none;
+      font-size: 1em;
     }
 
     #sendBtn {
@@ -97,11 +69,10 @@
       background-color: #4caf50;
       color: white;
       cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    #sendBtn:hover:not(:disabled) {
-      background-color: #45a049;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #sendBtn:disabled {
@@ -109,43 +80,75 @@
       cursor: not-allowed;
     }
 
-    .loading {
+    #loadingIndicator {
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
+      color: #4caf50;
     }
 
-    .loading i {
+    #playlist {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .playlist-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .playlist-item:last-child {
+      border-bottom: none;
+    }
+
+    .song-title {
+      font-size: 1em;
+      color: #333;
+    }
+
+    .song-link {
+      text-decoration: none;
+      color: #4caf50;
+      font-size: 0.9em;
+    }
+
+    .song-link:hover {
+      text-decoration: underline;
+    }
+
+    .loading-icon {
       font-size: 24px;
       animation: spin 2s linear infinite;
-      color: #4caf50;
     }
 
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
   </style>
 </head>
 <body>
 
-  <div class="chat-container">
-    <div class="chat-header">
-      <h2>AI Chat Assistant</h2>
-    </div>
-
-    <div id="chatWindow">
-      <!-- Chat messages will appear here -->
-    </div>
-
-    <div id="loadingIndicator" class="loading" hidden>
-      <i class="fas fa-spinner"></i>
-    </div>
+  <div class="app-container">
+    <div class="header">🎵 Playlist Generator</div>
 
     <div class="input-area">
-      <input type="text" id="textInput" placeholder="Type your message..." disabled />
-      <button id="sendBtn" disabled>Send</button>
+      <input type="text" id="textInput" placeholder="Describe your mood or genre..." disabled />
+      <button id="sendBtn" disabled><i class="fas fa-paper-plane"></i></button>
+    </div>
+
+    <div id="loadingIndicator" hidden>
+      <i class="fas fa-spinner loading-icon"></i>
+    </div>
+
+    <div id="playlist">
+      <!-- Playlist items will appear here -->
     </div>
   </div>
 
@@ -153,32 +156,43 @@
     import { LLM } from "./llm.js/llm.js";
 
     let LLMEngine;
-    let responseBuffer = ""; // Buffer to accumulate assistant responses
-    let isModelLoading = true; // Flag to indicate if the model is loading
 
-    const chatWindow = document.getElementById('chatWindow');
+    const playlistContainer = document.getElementById('playlist');
     const loadingIndicator = document.getElementById('loadingIndicator');
     const sendButton = document.getElementById('sendBtn');
     const textInput = document.getElementById('textInput');
 
-    // Initial message from assistant
-    appendMessage('assistant', 'Hello! I am your assistant. How can I help you today?');
+    // Enable input after page load
+    textInput.disabled = true;
+    sendButton.disabled = true;
 
     // Show loading indicator and load the model
     showLoading(true);
     loadModel();
 
-    function appendMessage(sender, message) {
-      const messageDiv = document.createElement('div');
-      messageDiv.classList.add('message', sender);
+    function appendPlaylist(songs) {
+      playlistContainer.innerHTML = ''; // Clear previous playlist
 
-      const contentDiv = document.createElement('div');
-      contentDiv.classList.add('content');
-      contentDiv.textContent = message;
+      songs.forEach((song, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.classList.add('playlist-item');
 
-      messageDiv.appendChild(contentDiv);
-      chatWindow.appendChild(messageDiv);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+        const titleDiv = document.createElement('div');
+        titleDiv.classList.add('song-title');
+        titleDiv.textContent = `${index + 1}. ${song.title} - ${song.artist}`;
+
+        const linkA = document.createElement('a');
+        linkA.classList.add('song-link');
+        linkA.href = song.url || "#";
+        linkA.target = "_blank";
+        linkA.textContent = "Listen";
+
+        itemDiv.appendChild(titleDiv);
+        itemDiv.appendChild(linkA);
+        playlistContainer.appendChild(itemDiv);
+      });
+
+      playlistContainer.scrollTop = playlistContainer.scrollHeight;
     }
 
     function showLoading(show) {
@@ -203,42 +217,47 @@
     }
 
     function onModelLoaded() {
-      isModelLoading = false;
       showLoading(false);
       sendButton.disabled = false;
       textInput.disabled = false;
+      textInput.focus();
     }
 
     function onMessageReceived(line) {
-      // Accumulate the assistant's response
-      responseBuffer += line;
-      // Optionally, you can update a temporary message to show streaming response
-      // For simplicity, we're just accumulating the response
+      // Assuming the model returns a JSON array of songs
+      try {
+        const songs = JSON.parse(line);
+        if (Array.isArray(songs)) {
+          appendPlaylist(songs);
+        } else {
+          console.error("Unexpected response format:", line);
+        }
+      } catch (e) {
+        console.error("Error parsing response:", e);
+      }
     }
 
     function onRunComplete() {
-      // Append the full response as a single message
-      appendMessage('assistant', responseBuffer);
-      responseBuffer = ""; // Clear the buffer
-
       showLoading(false);
       sendButton.disabled = false;
       textInput.disabled = false;
+      textInput.focus();
     }
 
     sendButton.addEventListener('click', () => {
       const userInput = textInput.value.trim();
       if (userInput === "") return;
 
-      appendMessage('user', userInput);
       textInput.value = "";
       sendButton.disabled = true;
       textInput.disabled = true;
       showLoading(true);
 
+      const prompt = `Generate a playlist of 10 songs based on the following description: "${userInput}". Provide the response in JSON format with each song having a title, artist, and a URL if available.`;
+
       const params = {
-        prompt: userInput,
-        max_token_len: 100,
+        prompt: prompt,
+        max_token_len: 500,
         top_k: 1
       };
 
