@@ -1,360 +1,357 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LLM.js - Playground</title>
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css"
-  />
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LLM.js - Playground</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
 </head>
 <style>
-  #llm_list {
+#llm_list {
     display: grid;
-    gap: 10px; /* Added some spacing between items */
-  }
+}
 
-  /* Removed the empty ruleset */
+#llm_list > div {
+  
+}
+
 </style>
 <body>
 
-  <div class="container">
-    <h1><a href="https://rahuldshetty.github.io/llm.js/#/" target="_blank">LLM.js</a> - Playground</h1>
+<div class="container">
+      <h1><a href="https://rahuldshetty.github.io/llm.js/#/" target="_blank">LLM.js</a> - Playground</h1>
 
-    <p>
-      Run <b>Large-Language Models (LLMs)</b> 🚀 directly in your browser 🌐! 
-    </p>
+      <p>
+        Run <b>Large-Language Models (LLMs)</b> 🚀 directly in your browser 🌐! 
+      </p>
 
-    <p>
-      Learn More: 📜 <a href="https://rahuldshetty.github.io/llm.js/#/api_guide" target="_blank">API Reference</a>
+      <p>
+        Learn More: 📜 <a href="https://rahuldshetty.github.io/llm.js/#/api_guide" target="_blank">API Reference</a>
 
-      Guidance: <a href="https://rahuldshetty.github.io/llm.js/#/guidance" target="_blank">API Reference</a>
-    </p>
+        Guidance: <a href="https://rahuldshetty.github.io/llm.js/#/guidance" target="_blank">API Reference</a>
+      </p>
 
-    <p>
-      Developed By: ✒️ <a href="https://rahuldshetty.github.io/" target="_blank">RDS </a>
-    </p>
+      <p>
+        Developed By: ✒️ <a href="https://rahuldshetty.github.io/" target="_blank">RDS </a>
+      </p>
 
-    <h2>Demo</h2>
 
-    <p>
-      This web demo enables you to run LLM models from Hugging Face (GGUF based) directly in your browser.
-    </p>
+      <h2>Demo</h2>
 
-    <form onsubmit="event.preventDefault();">
-      <div>
-        <span>Pick a Model:</span>
-        <progress id="progress" hidden></progress>
-        <div id="llm_list">
+      <p>
+        This web demo enables you to run LLM models from Hugging Face (GGUF based) directly in your browser.
+      </p>
+
+      <form onsubmit="event.preventDefault();">
+        <div>
+            <span>Pick a Model:</span>
+            <progress id="progress" hidden></progress>
+            <div id="llm_list">
+            </div>
+            <button id="loadBtn">Load Model</button>
         </div>
-        <button id="loadBtn">Load Model</button>
+
+        <label for="textInput">Craft your <i>prompt</i>📄:</label>
+        <textarea id="textInput" name="textInput" rows="10"></textarea>
+
+        <div>
+            <span>Use <a href="https://rahuldshetty.github.io/llm.js/#/guidance">Guidance</a>:</span>
+            <input type="radio" id="none" name="structure_llm" value="none" checked>
+            <label for="none">None</label>
+
+            <input type="radio" id="json-radio" name="structure_llm" value="json">
+            <label for="json-radio">JSON</label>
+
+            <input type="radio" id="cfg-radio" name="structure_llm" value="cfg">
+            <label for="cfg-radio">CFG</label>
+
+            <textarea style="display: none;" id="guidanceInput" name="textInput" rows="3" placeholder="Enter Grammar/JSON Schema"></textarea>
+        </div>
+                
+        <button id="submitBtn" disabled>Run</button>
+      </form>
+
+      <div id="result">
+        <h3>Result</h3>
+        <pre><code id="output" style="white-space: pre-wrap;"></code></pre>
       </div>
-
-      <label for="textInput">Craft your <i>prompt</i>📄:</label>
-      <textarea id="textInput" name="textInput" rows="10"></textarea>
-
-      <div>
-        <span>Use <a href="https://rahuldshetty.github.io/llm.js/#/guidance">Guidance</a>:</span>
-        <input type="radio" id="none" name="structure_llm" value="none" checked>
-        <label for="none">None</label>
-
-        <input type="radio" id="json-radio" name="structure_llm" value="json">
-        <label for="json-radio">JSON</label>
-
-        <input type="radio" id="cfg-radio" name="structure_llm" value="cfg">
-        <label for="cfg-radio">CFG</label>
-
-        <textarea style="display: none;" id="guidanceInput" name="textInput" rows="3" placeholder="Enter Grammar/JSON Schema"></textarea>
-      </div>
-              
-      <button id="submitBtn" disabled>Run</button>
-    </form>
-
-    <div id="result">
-      <h3>Result</h3>
-      <pre><code id="output" style="white-space: pre-wrap;"></code></pre>
     </div>
-  </div>
 
-  <script type="module">
-    import { LLM } from "./llm.js/llm.js";
+    <script type="module">
+        import {LLM} from "./llm.js/llm.js";
 
-    let LLMEngine;
+        let LLMEngine;
 
-    let progress = document.getElementById('progress');
-    let loadButton = document.getElementById('loadBtn');
-    let submitButton = document.getElementById('submitBtn');
+        let progress = document.getElementById('progress');
+        let loadButton = document.getElementById('loadBtn');
+        let submitButton = document.getElementById('submitBtn');
 
-    const radioButtons = document.querySelectorAll('input[name="structure_llm"]');
+        const radioButtons = document.querySelectorAll('input[name="structure_llm"]');
 
-    let inputElement = document.getElementById('textInput');
-    let outputElement = document.getElementById('output');
+        let inputElement = document.getElementById('textInput');
+        let outputElement = document.getElementById('output');
 
-    let guidanceInput = document.getElementById('guidanceInput');
-    let selectedOption = "none";
-    let jsonGrammar = '{"type": "array","items": {"type": "string"},"minItems": 3,"maxItems": 9}';
-    let cgfGrammar = `root ::= item+
+        let guidanceInput = document.getElementById('guidanceInput');
+        let selectedOption = "none";
+        let jsonGrammar = '{"type": "array","items": {"type": "string"},"minItems": 3,"maxItems": 9}';
+        let cgfGrammar = `root ::= item+
 item ::= "- " ([a-zA-Z]+){1,10} "\\n"
 `;
 
-    const available_llms = [
-      {
-        "id": 0,
-        "name": "Qwen2-0.5B-Instruct (353 MB)",
-        "link": "https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF",
-        "model": "https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF/resolve/main/qwen2-0_5b-instruct-q4_0.gguf",
-        "prompt": "<|im_start|>user\nList the 9 planets in Solar System<|im_end|>\n<|im_start|>assistant\n",
-        "type": "GGUF_CPU"
-      },
-      {
-        "id": 1,
-        "name": "TinyMistral-248M-SFT-v4 (264 MB)",
-        "link": "https://huggingface.co/Felladrin/TinyMistral-248M-SFT-v4",
-        "model": "https://huggingface.co/rahuldshetty/llm.js/resolve/main/TinyMistral-248M-SFT-v4.Q8_0.gguf",
-        "prompt": "<|im_start|>user\nWho is Sherlock Holmes?<|im_end|>\n<|im_start|>assistant\n",
-        "type": "GGUF_CPU"
-      },
-      {
-        "id": 2,
-        "name": "LLaMa Lite (289 MB)",
-        "link": "https://huggingface.co/Felladrin/llama2_xs_460M_experimental_evol_instruct",
-        "model": "https://huggingface.co/rahuldshetty/llm.js/resolve/main/llama2_xs_460m_experimental_evol_instruct.q4_k_m.gguf",
-        "prompt": "### Instruction:\n{prompt}\n\n### Response:\n",
-        "type": "GGUF_CPU"
-      },
-      {
-        "id": 3,
-        "name": "TinyLLama 1.5T (482 MB)",
-        "link": "https://huggingface.co/Corianas/tiny-llama-miniguanaco-1.5T",
-        "model": "https://huggingface.co/rahuldshetty/llm.js/resolve/main/tiny-llama-miniguanaco-1.5t.q2_k.gguf",
-        "prompt": "{prompt}\n",
-        "type": "GGUF_CPU"
-      },
-      {
-        "id": 4,
-        "name": "TinyMistral-248M-Alpaca (156 MB)",
-        "link": "https://huggingface.co/Felladrin/TinyMistral-248M-Evol-Instruct",
-        "model": "https://huggingface.co/afrideva/TinyMistral-248M-Alpaca-GGUF/resolve/main/tinymistral-248m-alpaca.q4_k_m.gguf",
-        "prompt": "### Instruction:\n{prompt}\n\n### Response:\n",
-        "type": "GGUF_CPU"
-      }
-    ]
-    
-    // Show Available LLMs
-    const populate_llm_list = () => {
-      const head = document.getElementById('llm_list');
-      
-      let customDiv = document.createElement('div');
-
-      available_llms.forEach(llm => {
-        // Container for each radio button and label
-        let top = document.createElement('div');
-
-        // Radio Button
-        let item = document.createElement('input');
-        item.type = 'radio';
-        item.id = `llm-${llm.id}`;
-        item.name = 'llm';
-        item.value = llm.name;
-
-        if(llm.id === 0){
-          item.checked = true;
-          inputElement.value = available_llms[0].prompt;
-        }
+        const available_llms = [
+            {
+                "id": 0,
+                "name": "Qwen2-0.5B-Instruct (353 MB)",
+                "link": "https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF",
+                "model": "https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF/resolve/main/qwen2-0_5b-instruct-q4_0.gguf",
+                "prompt": "<|im_start|>user\nList the 9 planets in Solar System<|im_end|>\n<|im_start|>assistant\n",
+                "type": "GGUF_CPU"
+            },
+            {
+                "id": 1,
+                "name": "TinyMistral-248M-SFT-v4 (264 MB)",
+                "link": "https://huggingface.co/Felladrin/TinyMistral-248M-SFT-v4",
+                "model": "https://huggingface.co/rahuldshetty/llm.js/resolve/main/TinyMistral-248M-SFT-v4.Q8_0.gguf",
+                "prompt": "<|im_start|>user\nWho is Sherlock Holmes?<|im_end|>\n<|im_start|>assistant\n",
+                "type": "GGUF_CPU"
+            },
+            {
+                "id": 2,
+                "name": "LLaMa Lite (289 MB)",
+                "link": "https://huggingface.co/Felladrin/llama2_xs_460M_experimental_evol_instruct",
+                "model": "https://huggingface.co/rahuldshetty/llm.js/resolve/main/llama2_xs_460m_experimental_evol_instruct.q4_k_m.gguf",
+                "prompt": "### Instruction:\n{prompt}\n\n### Response:\n",
+                "type": "GGUF_CPU"
+            },
+            {
+                "id": 3,
+                "name": "TinyLLama 1.5T (482 MB)",
+                "link": "https://huggingface.co/Corianas/tiny-llama-miniguanaco-1.5T",
+                "model": "https://huggingface.co/rahuldshetty/llm.js/resolve/main/tiny-llama-miniguanaco-1.5t.q2_k.gguf",
+                "prompt": "{prompt}\n",
+                "type": "GGUF_CPU"
+            },
+            {
+                "id": 4,
+                "name": "TinyMistral-248M-Alpaca (156 MB)",
+                "link": "https://huggingface.co/Felladrin/TinyMistral-248M-Evol-Instruct",
+                "model": "https://huggingface.co/afrideva/TinyMistral-248M-Alpaca-GGUF/resolve/main/tinymistral-248m-alpaca.q4_k_m.gguf",
+                "prompt": "### Instruction:\n{prompt}\n\n### Response:\n",
+                "type": "GGUF_CPU"
+            }
+        ]
         
-        // Label
-        let label = document.createElement('label');
-        label.htmlFor = `llm-${llm.id}`;
+        // Show Available LLMs
+        const populate_llm_list = () => {
+            const head = document.getElementById('llm_list');
+            
+            let div = document.createElement('div');
 
-        // Link
-        let anchor = document.createElement('a');
-        anchor.href = llm.link;
-        anchor.target = "_blank";
-        anchor.textContent = llm.name;
+            for(const llm of available_llms){
+                // Radio Button
+                let top = document.createElement('div');
 
-        label.appendChild(anchor);
+                let item = document.createElement('input');
+                item.type = 'radio';
+                item.id =  llm.id;
+                item.name = 'llm'
+                item.value = llm.name
 
-        top.appendChild(item);
-        top.appendChild(label);
+                if(llm.id == "0"){
+                    item.checked = true;
+                    inputElement.textContent = available_llms[0].prompt;
+                }
+                
+                // Label
+                let label = document.createElement('label');
+                item.for =  llm.id;
 
-        head.appendChild(top);
-      });
+                // Link
+                let anchor = document.createElement('a');
+                anchor.href = llm.link;
+                anchor.target = "_blank";
+                anchor.appendChild(document.createTextNode(llm.name))
 
-      // Custom Option
-      let top = document.createElement('div');
-      
-      let customItem = document.createElement('input');
-      customItem.type = 'radio';
-      customItem.id =  'llm-custom';
-      customItem.name = 'llm';
-      customItem.value = 'Custom';
+                label.appendChild(
+                    anchor
+                );
 
-      let customLabel = document.createElement('label');
-      customLabel.htmlFor = 'llm-custom';
-      customLabel.textContent = 'Custom';
+                top.appendChild(item);
+                top.appendChild(label);
 
-      top.appendChild(customItem);
-      top.appendChild(customLabel);
+                head.appendChild(top);
+                head.appendChild(document.createElement('br'));
 
-      head.appendChild(top);
-      
-      // Custom Inputs Container
-      customDiv.hidden = true;
-      customDiv.id = 'customInputs';
 
-      let url_input = document.createElement('input');
-      url_input.type = 'text';
-      url_input.id =  'customURL';
-      url_input.value = "https://huggingface.co/rahuldshetty/llm.js/resolve/main/TinyMistral-248M-SFT-v4.Q8_0.gguf";
-      url_input.placeholder = "URL";
-      url_input.size = 60;
-      customDiv.appendChild(url_input);
-      customDiv.appendChild(document.createElement('br'));
+                // Event handler: Selecting Radio Button
+                item.addEventListener('change', (e)=>{
+                    if(e.target.id)
+                        inputElement.textContent = available_llms[Number.parseInt(e.target.id)].prompt;
+                    submitButton.disabled = true;
+                    div.hidden = true;
+                })
+            }
 
-      let type_input = document.createElement('input');
-      type_input.type = 'text';
-      type_input.id =  'customType';
-      type_input.value = "GGUF_CPU";
-      type_input.placeholder = "TYPE";
-      type_input.size = 20;
-      customDiv.appendChild(type_input);
+            // Custom
+            let top = document.createElement('div');
+            
+            let item = document.createElement('input');
+            item.type = 'radio';
+            item.id =  -1;
+            item.name = 'llm'
+            item.value = 'Custom'
 
-      head.appendChild(customDiv);
+            let label = document.createElement('label');
+            item.for =  -1;
+            label.appendChild(document.createTextNode('Custom '));
+            
+            // Input Text
+            div.hidden = true;
 
-      // Event handler: Selecting Radio Button
-      customItem.addEventListener('change', () => {
-        inputElement.value = "";
-        submitButton.disabled = true;
-        customDiv.hidden = false;
-      });
+            let url_input = document.createElement('input');
+            url_input.type = 'text';
+            url_input.id =  'customURL';
+            url_input.value = "https://huggingface.co/rahuldshetty/llm.js/resolve/main/TinyMistral-248M-SFT-v4.Q8_0.gguf"
+            url_input.placeholder = "URL"
+            url_input.size = 60
+            div.appendChild(url_input);
 
-      // Event handler: Selecting a predefined LLM
-      available_llms.forEach(llm => {
-        document.getElementById(`llm-${llm.id}`).addEventListener('change', () => {
-          inputElement.value = llm.prompt;
-          submitButton.disabled = false;
-          customDiv.hidden = true;
-        });
-      });
-    }
+            let type_input = document.createElement('input');
+            type_input.type = 'text';
+            type_input.id =  'customType';
+            type_input.value = "GGUF_CPU"
+            type_input.placeholder = "TYPE"
+            div.appendChild(type_input);
 
-    // Event Listener Functions
-    const on_loaded = () => {
-      loadButton.disabled = false;
-      submitButton.disabled = false;
-      progress.hidden = true;
-    }
+            top.appendChild(item);
+            top.appendChild(label);
 
-    const write_result = (line) => {
-      outputElement.textContent  += line + "\n";
-    }
+            head.appendChild(top);
+            head.appendChild(div);
 
-    const run_complete = () => {
-      submitButton.disabled = false;
-    }
-
-    const load_llm_from_url = (link, type) => {
-      progress.hidden = false;
-      loadButton.disabled = true;
-
-      LLMEngine = new LLM(
-        type,
-        link,
-        on_loaded,
-        write_result,
-        run_complete
-      );
-
-      LLMEngine.load_worker();
-    }
-
-    // Actions
-
-    const load_model = () => {
-      const selected = document.querySelector('input[name="llm"]:checked').id;
-      let llm;
-      if(selected.startsWith('llm-') && selected !== 'llm-custom') {
-        const id = parseInt(selected.split('-')[1], 10);
-        llm = available_llms.find(model => model.id === id);
-      } else {
-        llm = {
-          model: document.getElementById("customURL").value,
-          type: document.getElementById("customType").value,
+            // Event handler: Selecting Radio Button
+            item.addEventListener('change', (e)=>{
+                inputElement.textContent = "";
+                submitButton.disabled = true;
+                div.hidden = false;
+            })
         }
-      }
-      load_llm_from_url(llm.model, llm.type);
-    }
 
-    const run_model = () => {
-      const text = inputElement.value;
-      if (!text.trim()) {
-        alert("Please enter a prompt.");
-        return;
-      }
-      submitButton.disabled = true;
-      outputElement.textContent = ""; // clear old content
-      let params = {
-        prompt: text,
-        max_token_len: 100,
-        top_k: 1
-      }
-      
-      if (selectedOption == "cfg"){
-        params['grammar'] = cgfGrammar;
-      } else if(selectedOption == "json"){
-        params['json_schema'] = jsonGrammar;
-      }
-      LLMEngine.run(params);
-    }
+        // Event Listener Functions
+        const on_loaded = () => {
+            loadButton.disabled = false;
+            submitButton.disabled = false;
+            progress.hidden = true;
+        }
 
-    const onTextareaInput = (event) => {
-      const text = event.target.value;
-      if (selectedOption == "cfg"){
-        cgfGrammar = text;
-      } else if (selectedOption == "json"){
-        jsonGrammar = text;
-      }
-    }
+        const write_result = (line) => {
+            outputElement.textContent  += line + "\n";
+        }
+
+        const run_complete = () => {
+            submitButton.disabled = false;
+        }
+
+        const load_llm_from_url = (link, type) => {
+            progress.hidden = false;
+            loadButton.disabled = true;
+
+            LLMEngine = new LLM(
+                type,
+                link,
+                on_loaded,
+                write_result,
+                run_complete
+            );
+
+            LLMEngine.load_worker();
+        }
+
+        // Actions
+
+        const load_model = (e) => {
+            const selected = document.querySelector('input[name="llm"]:checked').id;
+            let llm;
+            if(selected != -1)
+            {
+                llm = available_llms[Number.parseInt(selected)];
+            } else {
+                llm = {
+                    model: document.getElementById("customURL").value,
+                    type: document.getElementById("customType").value,
+                }
+            }
+            load_llm_from_url(llm.model, llm.type);
+        }
+
+        const run_model = (e) => {
+            const text = inputElement.value;
+            submitButton.disabled = true;
+            outputElement.textContent = ""; // clead old content
+            let params = {
+                prompt: text,
+                max_token_len: 100,
+                top_k: 1
+            }
+            
+            if (selectedOption == "cfg"){
+                params['grammar'] = cgfGrammar;
+            } else if(selectedOption == "json"){
+                params['json_schema'] = jsonGrammar;
+            }
+            LLMEngine.run(params);
+        }
+
+        const onTextareaInput = (event) => {
+            const text = event.target.value;
+            if (selectedOption == "cfg"){
+                cgfGrammar = text;
+            } else if (selectedOption == "json"){
+                jsonGrammar = text;
+            }
+        }
 
 
-    const onRadioButtonSelected = (e) =>{
-      selectedOption = e.target.value;
+        const onRadioButtonSelected = (e) =>{
+            selectedOption = e.target.value;
 
-      // Hide/Unhide guidance input
-      if (selectedOption != "none"){
-        guidanceInput.style.display = "block";
-      } else{
-        guidanceInput.style.display = "none";
-      }
+            // Hide/Unhide guidance input
+            if (selectedOption != "none"){
+                guidanceInput.style.display = "block";
+            } else{
+                guidanceInput.style.display = "none";
+            }
 
-      // Set Event listeners
-      if (selectedOption == 'cfg'){
-        guidanceInput.value = cgfGrammar;
-      } else if (selectedOption == 'json'){
-        guidanceInput.value = jsonGrammar;
-      }
-    }
+            // Set Event listeners
+            if (selectedOption == 'cfg'){
+                guidanceInput.value = cgfGrammar;
+            } else if (selectedOption == 'json'){
+                guidanceInput.value = jsonGrammar;
+            }
+        }
 
-    // Loader Scripts
-    populate_llm_list();
-    loadButton.addEventListener("click", load_model);        
-    submitButton.addEventListener("click", run_model);
-    guidanceInput.addEventListener("input", onTextareaInput);
+        // Loader Scripts
+        populate_llm_list();
+        loadButton.addEventListener("click", load_model);        
+        submitButton.addEventListener("click", run_model);
+        guidanceInput.addEventListener("input", onTextareaInput);
 
-    // Add event listeners to each radio button for guidance
-    radioButtons.forEach(radio => {
-      radio.addEventListener('change', onRadioButtonSelected);
-    });
+        // Add event listeners to each radio button
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', onRadioButtonSelected);
+        });
 
-  </script>
+    </script>
 
-</body>
+    </body>
 </html>
