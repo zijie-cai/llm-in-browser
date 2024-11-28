@@ -17,9 +17,6 @@
       <textarea id="descriptionInput" name="descriptionInput" rows="5"></textarea>
       <button id="submitBtn" disabled>Generate Playlist</button>
     </form>
-    <div id="loading" style="display: none;">
-      <p>Generating your playlist...</p>
-    </div>
     <div id="result" style="display: none;">
       <h3>Your Playlist</h3>
       <p id="userDescription"></p>
@@ -36,67 +33,37 @@
     const userDescriptionElement = document.getElementById('userDescription');
     const playlistElement = document.getElementById('playlist');
     const resultDiv = document.getElementById('result');
-    const loadingDiv = document.getElementById('loading');
 
     let accumulatedOutput = '';
-
-    // Updated regex to match lines starting with one or more digits, followed by a dot and a space
-    const songLineRegex = /^\d+\.\s+.+,\s+.+$/;
 
     const on_loaded = () => {
       submitButton.disabled = false;
     };
 
     const write_result = (line) => {
-      accumulatedOutput += line.trim() + '\n'; // Trim whitespace and ensure lines are separated
+      accumulatedOutput += line + '\n'; // Ensure lines are separated
     };
-
-    let retryCount = 0;
-    const MAX_RETRIES = 2; // Adjust as needed
 
     const run_complete = () => {
       submitButton.disabled = false;
-      loadingDiv.style.display = 'none'; // Hide loading
+      resultDiv.style.display = 'block';
 
-      // Split the accumulated output into lines
-      let lines = accumulatedOutput.split('\n');
+      // Process the accumulated output to extract songs
+      let songs = accumulatedOutput.split('\n').filter(line => {
+        // Use regex to match lines that start with a number followed by a dot
+        return /^\d+\.\s+.+,\s+.+$/.test(line.trim());
+      });
 
-      // Use regex to filter lines that match the desired format
-      let songs = lines.filter(line => songLineRegex.test(line));
-
-      // Ensure exactly 10 songs
-      if (songs.length < 10) {
-        if (retryCount < MAX_RETRIES) {
-          retryCount++;
-          accumulatedOutput = '';
-          run_model(); // Re-run the model
-          return;
-        } else {
-          alert(`Only ${songs.length} songs were generated after ${MAX_RETRIES} attempts. Please try again.`);
-          resultDiv.style.display = 'none';
-          accumulatedOutput = ''; // Reset for next time
-          return;
-        }
-      }
-
-      // Reset retry count upon successful generation
-      retryCount = 0;
-
-      // If more than 10 songs are generated, take the first 10
-      songs = songs.slice(0, 10);
-
-      // Populate the playlist
       playlistElement.innerHTML = '';
       songs.forEach(song => {
         let li = document.createElement('li');
         li.textContent = song.trim();
         playlistElement.appendChild(li);
       });
-
-      // Display user description
-      userDescriptionElement.textContent = 'Description: ' + descriptionInput.value.trim();
-
-      resultDiv.style.display = 'block';
+      
+      if (songs.length === 0) {
+        playlistElement.innerHTML = '<li>No songs were generated. Please try again.</li>';
+      }
 
       accumulatedOutput = ''; // Reset for next time
     };
@@ -125,10 +92,10 @@
       }
       submitButton.disabled = true;
       resultDiv.style.display = 'none';
-      loadingDiv.style.display = 'block'; // Show loading
+      userDescriptionElement.textContent = 'Description: ' + userDescription;
       playlistElement.innerHTML = ''; // Clear previous results
 
-      const prompt = `Generate a playlist of 10 songs based on the following description: "${userDescription}". Provide the songs in a strictly numbered list format, where each item is in the form "1. Song Name, Artist". Only provide the numbered list from 1 to 10.`;
+      const prompt = `Generate a playlist of 10 songs based on the following description: "${userDescription}". Provide the songs in a numbered list format, where each item is in the form "1. Song Name, Artist". Do not include any additional text or explanations.`;
 
       const params = {
         prompt: prompt,
