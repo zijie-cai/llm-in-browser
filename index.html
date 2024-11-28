@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Music Playlist Generator_c</title>
+    <title>AI Music Playlist Generator</title>
     <!-- Minimal Styling -->
     <style>
         body {
@@ -42,6 +42,7 @@
         }
         .message {
             margin: 5px 0;
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
         }
         .user {
             text-align: right;
@@ -81,6 +82,9 @@
         const chatContainer = document.getElementById('chatContainer');
         const messages = document.getElementById('messages');
         const userInput = document.getElementById('userInput');
+
+        // Variable to accumulate assistant's response
+        let assistantResponse = '';
 
         // Model Configuration
         const modelConfig = {
@@ -129,6 +133,9 @@
             userInput.value = "";
             sendButton.disabled = true;
 
+            // Reset assistant response
+            assistantResponse = '';
+
             const prompt = `${modelConfig.promptStart}${text}${modelConfig.promptEnd}`;
             const params = {
                 prompt: prompt,
@@ -139,21 +146,36 @@
             LLMEngine.run(params);
         };
 
-        // Display Messages
+        // Display Messages with HTML Escaping and Line Breaks
         const addMessage = (sender, text) => {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender.toLowerCase());
-            msgDiv.textContent = `${sender}: ${text}`;
+
+            // Escape HTML to prevent injection
+            const escapedText = escapeHTML(text);
+
+            // Replace newline characters with <br> for proper formatting
+            msgDiv.innerHTML = `<strong>${sender}:</strong> ${escapedText.replace(/\n/g, '<br>')}`;
             messages.appendChild(msgDiv);
             messages.scrollTop = messages.scrollHeight;
         };
 
+        // Function to escape HTML special characters
+        const escapeHTML = (str) => {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        };
+
         // Receive Message from Model
         const writeMessage = (line) => {
-            addMessage("Assistant", line);
+            assistantResponse += line + '\n';
         };
 
         const onRunComplete = () => {
+            // Remove the last newline character
+            assistantResponse = assistantResponse.trim();
+            addMessage("Assistant", assistantResponse);
             sendButton.disabled = false;
         };
 
