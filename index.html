@@ -86,7 +86,7 @@
       userDescriptionElement.textContent = 'Description: ' + userDescription;
       playlistElement.innerHTML = ''; // Clear previous results
 
-      const prompt = "List 10 song names with their artists based on the description:  "{userDescription}".  Only list the songs in a numbered format without any extra explanation.`;
+      const prompt = "List 10 song names with their artists based on the description:  "${userDescription}".  Only list the songs in a numbered format without any extra explanation.`;
 
       const params = {
         prompt: prompt,
