@@ -8,158 +8,249 @@
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css"
   />
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f5f5f5;
+      margin: 0;
+    }
+
+    .playlist-container {
+      width: 90%;
+      max-width: 500px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .playlist-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .playlist-header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #333;
+    }
+
+    .input-area {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    #descriptionInput {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      margin-right: 10px;
+    }
+
+    #generateBtn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #generateBtn:hover:not(:disabled) {
+      background-color: #45a049;
+    }
+
+    #generateBtn:disabled {
+      background-color: #9e9e9e;
+      cursor: not-allowed;
+    }
+
+    #playlistWindow {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .playlist-description {
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    .playlist-songs {
+      list-style-type: decimal;
+      padding-left: 20px;
+    }
+
+    .playlist-songs li {
+      margin-bottom: 10px;
+      color: #333;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Song Playlist Generator</h1>
-    <form onsubmit="event.preventDefault();">
-      <label for="descriptionInput">Enter a description:</label>
-      <textarea id="descriptionInput" name="descriptionInput" rows="5"></textarea>
-      <button id="submitBtn" disabled>Generate Playlist</button>
-    </form>
-    <div id="loading" style="display: none;">
-      <p>Generating your playlist...</p>
+
+  <div class="playlist-container">
+    <div class="playlist-header">
+      <h1>Song Playlist Generator</h1>
     </div>
-    <div id="result" style="display: none;">
-      <h3>Your Playlist</h3>
-      <p id="userDescription"></p>
-      <ol id="playlist"></ol>
+
+    <div class="input-area">
+      <input type="text" id="descriptionInput" placeholder="Enter your description..." />
+      <button id="generateBtn" disabled>Generate Playlist</button>
+    </div>
+
+    <div id="playlistWindow">
+      <!-- User description and playlist will appear here -->
     </div>
   </div>
+
   <script type="module">
     import { LLM } from "./llm.js/llm.js";
 
     let LLMEngine;
 
-    const submitButton = document.getElementById('submitBtn');
+    const playlistWindow = document.getElementById('playlistWindow');
+    const generateButton = document.getElementById('generateBtn');
     const descriptionInput = document.getElementById('descriptionInput');
-    const userDescriptionElement = document.getElementById('userDescription');
-    const playlistElement = document.getElementById('playlist');
-    const resultDiv = document.getElementById('result');
-    const loadingDiv = document.getElementById('loading');
 
-    let accumulatedOutput = '';
+    // Load the model when the page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      loadModel();
+    });
 
-    // Updated regex to match lines starting with one or more digits, followed by a dot and a space, then "Song Name", Artist
-    const songLineRegex = /^\d+\.\s+".+",\s+.+$/;
-
-    const on_loaded = () => {
-      submitButton.disabled = false;
-    };
-
-    const write_result = (line) => {
-      accumulatedOutput += line.trim() + '\n'; // Trim whitespace and ensure lines are separated
-    };
-
-    let retryCount = 0;
-    const MAX_RETRIES = 2; // Adjust as needed
-
-    const run_complete = () => {
-      submitButton.disabled = false;
-      loadingDiv.style.display = 'none'; // Hide loading
-
-      // Remove any code block markers if present
-      let cleanedOutput = accumulatedOutput.replace(/```/g, '').trim();
-
-      // Split the cleaned output into lines
-      let lines = cleanedOutput.split('\n');
-
-      // Use regex to filter lines that match the desired format
-      let songs = lines.filter(line => songLineRegex.test(line));
-
-      // Ensure exactly 10 songs
-      if (songs.length < 5) {
-        if (retryCount < MAX_RETRIES) {
-          retryCount++;
-          accumulatedOutput = '';
-          run_model(); // Re-run the model
-          return;
-        } else {
-          alert(`Only ${songs.length} songs were generated after ${MAX_RETRIES} attempts. Please try again.`);
-          resultDiv.style.display = 'none';
-          accumulatedOutput = ''; // Reset for next time
-          return;
-        }
-      }
-
-      // Reset retry count upon successful generation
-      retryCount = 0;
-
-      // If more than 10 songs are generated, take the first 10
-      songs = songs.slice(0, 10);
-
-      // Populate the playlist
-      playlistElement.innerHTML = '';
-      songs.forEach(song => {
-        let li = document.createElement('li');
-        li.textContent = song.trim();
-        playlistElement.appendChild(li);
-      });
+    function appendPlaylist(description, songs) {
+      // Clear previous content
+      playlistWindow.innerHTML = '';
 
       // Display user description
-      userDescriptionElement.textContent = 'Description: ' + descriptionInput.value.trim();
+      const descDiv = document.createElement('div');
+      descDiv.classList.add('playlist-description');
+      descDiv.textContent = `Description: ${description}`;
+      playlistWindow.appendChild(descDiv);
 
-      resultDiv.style.display = 'block';
+      // Display list of songs
+      const songsList = document.createElement('ol');
+      songsList.classList.add('playlist-songs');
 
-      accumulatedOutput = ''; // Reset for next time
-    };
+      songs.forEach(song => {
+        const listItem = document.createElement('li');
+        listItem.textContent = song;
+        songsList.appendChild(listItem);
+      });
 
-    const load_llm = () => {
-      // Use the default model
-      const modelURL = "https://huggingface.co/bartowski/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf";
-      const modelType = "GGUF_CPU";
+      playlistWindow.appendChild(songsList);
+      playlistWindow.scrollTop = playlistWindow.scrollHeight;
+    }
+
+    function showLoading(show) {
+      generateButton.disabled = show || !descriptionInput.value.trim();
+      descriptionInput.disabled = show;
+      if (show) {
+        generateButton.textContent = 'Generating...';
+      } else {
+        generateButton.textContent = 'Generate Playlist';
+      }
+    }
+
+    function loadModel() {
+      const modelInfo = {
+        model: "https://huggingface.co/bartowski/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        type: "GGUF_CPU"
+      };
 
       LLMEngine = new LLM(
-        modelType,
-        modelURL,
-        on_loaded,
-        write_result,
-        run_complete
+        modelInfo.type,
+        modelInfo.model,
+        onModelLoaded,
+        onMessageReceived,
+        onRunComplete,
+        onModelLoadError
       );
 
+      showLoading(true);
       LLMEngine.load_worker();
-    };
+    }
 
-    const run_model = () => {
-      const userDescription = descriptionInput.value.trim();
-      if (!userDescription) {
-        alert("Please enter a description.");
-        return;
+    function onModelLoaded() {
+      showLoading(false);
+      generateButton.disabled = !descriptionInput.value.trim();
+      // Optionally, display a welcome message
+      // appendPlaylist('Model loaded. Enter a description to generate a playlist.', []);
+    }
+
+    function onModelLoadError(error) {
+      showLoading(false);
+      alert('Failed to load the model. Please try again later.');
+      console.error('Model Load Error:', error);
+    }
+
+    function onMessageReceived(line) {
+      // Accumulate the response
+      if (!LLMEngine.response) {
+        LLMEngine.response = [];
       }
-      submitButton.disabled = true;
-      resultDiv.style.display = 'none';
-      loadingDiv.style.display = 'block'; // Show loading
-      playlistElement.innerHTML = ''; // Clear previous results
+      LLMEngine.response.push(line);
+    }
 
-      const prompt = `Generate a playlist of 10 songs based on the following description: "${userDescription}". Provide the songs in a strictly numbered list format, where each item is in the form "1. Song Name, Artist". Ensure that:
-- Each number is a single integer followed by a dot and a space.
-- There are no code blocks (no triple backticks).
-- No additional text, explanations, or summaries are included before or after the list.
-- Each song is on a new line.
+    function onRunComplete() {
+      showLoading(false);
+      generateButton.disabled = !descriptionInput.value.trim();
 
-**Example:**
-1. "Song One", Artist A
-2. "Song Two", Artist B
-...
-10. "Song Ten", Artist J`;
+      // Process the accumulated response
+      const response = LLMEngine.response.join('\n').trim();
+      // Extract song titles assuming they are listed line by line
+      const songs = response.split('\n').map(song => song.trim()).filter(song => song);
+
+      appendPlaylist(descriptionInput.value.trim(), songs.slice(0, 10)); // Ensure only 10 songs are displayed
+
+      // Reset the response
+      LLMEngine.response = [];
+    }
+
+    generateButton.addEventListener('click', () => {
+      const userDescription = descriptionInput.value.trim();
+      if (userDescription === "") return;
+
+      showLoading(true);
+
+      // Clear previous playlist
+      playlistWindow.innerHTML = '';
+
+      // Prepare the prompt
+      const prompt = `Generate a list of 10 song titles based on the following description:\n\n"${userDescription}"\n\nList the songs as separate lines without numbering or additional text.`;
 
       const params = {
         prompt: prompt,
-        max_token_len: 300,
-        temperature: 0.7,
-        top_p: 0.9,
+        max_token_len: 300, // Adjust as needed
+        top_k: 1
       };
 
+      // Run the model
       LLMEngine.run(params);
-    };
+    });
 
-    // Load the model when the page loads
-    window.onload = () => {
-      load_llm();
-    };
+    // Enable generate button when input is not empty
+    descriptionInput.addEventListener('input', () => {
+      generateButton.disabled = !descriptionInput.value.trim() || (LLMEngine && LLMEngine.isRunning);
+    });
 
-    // Add event listener to submit button
-    submitButton.addEventListener("click", run_model);
+    // Enable generating playlist on Enter key
+    descriptionInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !generateButton.disabled) {
+        generateButton.click();
+      }
+    });
   </script>
+
 </body>
 </html>
