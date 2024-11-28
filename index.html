@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Music Playlist Generator_cd</title>
+    <title>AI Music Playlist Generator</title>
     <!-- Minimal Styling -->
     <style>
         body {
@@ -82,6 +82,7 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            transition: opacity 0.5s;
         }
         /* Spinner Styles */
         .spinner {
@@ -97,25 +98,11 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* Animated Progress Bar */
-        #progressBarContainer {
-            width: 80%;
-            background-color: #e0e0e0;
-            border-radius: 25px;
-            overflow: hidden;
-            height: 20px;
-            margin-bottom: 10px;
-        }
-        #progressBar {
-            height: 100%;
-            width: 0%;
-            background-color: #3498db;
-            border-radius: 25px 0 0 25px;
-            animation: progressAnimation 3s linear forwards;
-        }
-        @keyframes progressAnimation {
-            from { width: 0%; }
-            to { width: 100%; }
+        /* Loading Message Styles */
+        #loadingMessage {
+            font-size: 1.2em;
+            color: #333;
+            text-align: center;
         }
         /* Responsive Adjustments */
         @media (max-width: 600px) {
@@ -131,6 +118,9 @@
                 height: 50px;
                 border-width: 6px;
             }
+            #loadingMessage {
+                font-size: 1em;
+            }
         }
     </style>
 </head>
@@ -141,10 +131,7 @@
     <!-- Loading Overlay -->
     <div id="loadingOverlay">
         <div class="spinner"></div>
-        <div id="progressBarContainer">
-            <div id="progressBar"></div>
-        </div>
-        <div>Loading the AI model, please wait...</div>
+        <div id="loadingMessage">Loading the AI model, please wait...</div>
     </div>
 
     <div id="chatContainer" hidden>
@@ -161,7 +148,6 @@
         let LLMEngine;
         const sendButton = document.getElementById('sendBtn');
         const loadingOverlay = document.getElementById('loadingOverlay');
-        const progressBar = document.getElementById('progressBar');
         const chatContainer = document.getElementById('chatContainer');
         const messages = document.getElementById('messages');
         const userInput = document.getElementById('userInput');
@@ -182,27 +168,20 @@
         const loadModel = () => {
             // Show the loading overlay
             loadingOverlay.style.display = 'flex';
-            progressBar.style.width = '0%';
             LLMEngine = new LLM(
                 modelConfig.type,
                 modelConfig.url,
                 onLoaded,
                 writeMessage,
                 onRunComplete,
-                updateProgress
+                null // Removed updateProgress as progress bar is no longer used
             );
 
             LLMEngine.load_worker();
         };
 
-        // Update Progress Bar
-        const updateProgress = (value) => {
-            progressBar.style.width = `${value}%`;
-        };
-
         const onLoaded = () => {
             // Hide the loading overlay with a fade-out effect
-            loadingOverlay.style.transition = 'opacity 0.5s';
             loadingOverlay.style.opacity = '0';
             setTimeout(() => {
                 loadingOverlay.style.display = 'none';
