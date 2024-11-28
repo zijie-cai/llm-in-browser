@@ -177,8 +177,7 @@
         const onRunComplete = () => {
             // Trim and clean the final assistant response
             assistantResponse = assistantResponse
-                .replace(/<\|im_start\|>user.*?<\|im_end\|>/gs, '') // Remove the entire user prompt block
-                .replace(/assistant\s*:/i, '') // Remove "assistant:" if it appears
+                .replace(/^.*Make a playlist of 10 songs based on user description:.*?explanation\.\n*/i, '') // Remove the introductory text
                 .trim();
             
             addMessage("Assistant", assistantResponse);
