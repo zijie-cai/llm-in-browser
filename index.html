@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Music Playlist Generator_C</title>
+    <title>AI Music Playlist Generator</title>
     <!-- Minimal Styling -->
     <style>
         body {
@@ -91,8 +91,7 @@
             name: "Qwen2.5-0.5B-Instruct",
             url: "https://huggingface.co/bartowski/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
             type: "GGUF_CPU",
-            promptStart: "<|im_start|>user\nMake a playlist of 10 songs based on user description: ",
-            promptEnd: ". Only list the songs with a numbered list and artist names without other explanation.\n<|im_end|>\n<|im_start|>assistant\n"
+            prompt: "Make a playlist of 10 unique songs based on the following description. Provide only a numbered list with song titles and artist names, each on a new line, without any additional text or explanations. Ensure that there are no duplicate songs and that the numbering is correct from 1 to 10.",
         };
 
         // Load Model Function
@@ -136,12 +135,11 @@
             // Reset assistant response
             assistantResponse = '';
 
-            const prompt = `${modelConfig.promptStart}${text}${modelConfig.promptEnd}`;
+            const prompt = `${modelConfig.prompt}\nDescription: ${text}`;
             const params = {
                 prompt: prompt,
-                max_token_len: 300,
-                temperature: 0.7
-                top_k: 50
+                max_token_len: 200,
+                top_k: 1
             };
 
             LLMEngine.run(params);
@@ -176,7 +174,38 @@
         const onRunComplete = () => {
             // Remove the last newline character
             assistantResponse = assistantResponse.trim();
-            addMessage("Assistant", assistantResponse);
+
+            // Post-processing to remove any unintended text
+            const cleanedResponse = assistantResponse
+                .split('\n')
+                .filter(line => {
+                    const lower = line.toLowerCase();
+                    return !lower.startsWith('user') && !lower.startsWith('assistant');
+                })
+                .join('\n');
+
+            // Further clean up duplicates and incorrect numbering if necessary
+            const uniqueLines = [];
+            const seen = new Set();
+            const lines = cleanedResponse.split('\n');
+            lines.forEach(line => {
+                // Validate the line format: starts with a number followed by a period
+                if (/^\d+\.\s/.test(line)) {
+                    // Check for duplicates
+                    if (!seen.has(line)) {
+                        uniqueLines.push(line);
+                        seen.add(line);
+                    }
+                }
+            });
+
+            // Check if we have exactly 10 songs
+            if (uniqueLines.length === 10) {
+                addMessage("Assistant", uniqueLines.join('<br>'));
+            } else {
+                addMessage("Assistant", "Sorry, I encountered an issue generating a proper playlist. Please try again.");
+            }
+
             sendButton.disabled = false;
         };
 
