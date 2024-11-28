@@ -91,6 +91,9 @@
             promptEnd: ". Only list the songs with a numbered list and artist names without other explanation.\n<|im_end|>\n<|im_start|>assistant\n"
         };
 
+        // Variable to accumulate assistant's response
+        let assistantResponse = "";
+
         // Load Model Function
         const loadModel = () => {
             progress.hidden = false;
@@ -128,6 +131,7 @@
             addMessage("User", text);
             userInput.value = "";
             sendButton.disabled = true;
+            assistantResponse = ""; // Reset previous response
 
             const prompt = `${modelConfig.promptStart}${text}${modelConfig.promptEnd}`;
             const params = {
@@ -143,17 +147,28 @@
         const addMessage = (sender, text) => {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender.toLowerCase());
-            msgDiv.textContent = `${sender}: ${text}`;
+            if (sender === "Assistant") {
+                // For assistant, display without the 'Assistant:' prefix
+                msgDiv.textContent = text;
+            } else {
+                // For user and system messages, include the prefix
+                msgDiv.textContent = `${sender}: ${text}`;
+            }
             messages.appendChild(msgDiv);
             messages.scrollTop = messages.scrollHeight;
         };
 
         // Receive Message from Model
         const writeMessage = (line) => {
-            addMessage("Assistant", line);
+            // Accumulate the response
+            assistantResponse += line + "\n";
         };
 
         const onRunComplete = () => {
+            // After the model finishes generating the response, display it
+            // Trim any trailing whitespace and ensure it's properly formatted
+            const formattedResponse = assistantResponse.trim();
+            addMessage("Assistant", formattedResponse);
             sendButton.disabled = false;
         };
 
