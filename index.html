@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Music Playlist Generator_cdcd</title>
+    <title>AI Music Playlist Generator</title>
     <!-- Minimal Styling -->
     <style>
         body {
@@ -139,7 +139,7 @@
             const prompt = `${modelConfig.promptStart}${text}${modelConfig.promptEnd}`;
             const params = {
                 prompt: prompt,
-                max_token_len: 200,
+                max_token_len: 250,
                 top_k: 1
             };
 
