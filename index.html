@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Music Playlist Generator</title>
+    <title>AI Music Playlist Generator_c</title>
     <!-- Minimal Styling -->
     <style>
         body {
@@ -91,8 +91,8 @@
             name: "Qwen2.5-0.5B-Instruct",
             url: "https://huggingface.co/bartowski/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
             type: "GGUF_CPU",
-            promptStart: "<|im_start|>user\nMake a playlist of 10 songs based on user description: ",
-            promptEnd: ". Only list the songs with a numbered list and artist names without other explanation.\n<|im_end|>\n<|im_start|>assistant\n"
+            promptStart: "<|im_start|>user\nMake a playlist of 10 unique songs based on the following description: ",
+            promptEnd: ". Provide only a numbered list with each entry in the format 'number. \"Song Title\" by Artist Name - Duration'. Ensure there are no duplicate songs and maintain consistent formatting.\n<|im_end|>\n<|im_start|>assistant\n"
         };
 
         // Load Model Function
@@ -139,8 +139,9 @@
             const prompt = `${modelConfig.promptStart}${text}${modelConfig.promptEnd}`;
             const params = {
                 prompt: prompt,
-                max_token_len: 200,
-                top_k: 1
+                max_token_len: 300, // Increased token length
+                temperature: 0.7,    // Increased temperature
+                top_k: 50            // Adjusted top_k
             };
 
             LLMEngine.run(params);
@@ -167,6 +168,45 @@
             return div.innerHTML;
         };
 
+        // Function to remove duplicate songs
+        const removeDuplicates = (songs) => {
+            const seen = new Set();
+            return songs.filter(song => {
+                const identifier = song.title.toLowerCase() + song.artist.toLowerCase();
+                if (seen.has(identifier)) {
+                    return false;
+                }
+                seen.add(identifier);
+                return true;
+            });
+        };
+
+        // Function to parse and validate the assistant's response
+        const parseAssistantResponse = (response) => {
+            const lines = response.split('\n');
+            const songs = [];
+
+            const songRegex = /^(\d+)\.\s*"(.+)"\s+by\s+(.+?)\s+-\s+([\d:]+)$/;
+
+            lines.forEach(line => {
+                const match = line.match(songRegex);
+                if (match) {
+                    const [, number, title, artist, duration] = match;
+                    songs.push({ number: parseInt(number), title, artist, duration });
+                }
+            });
+
+            // Remove duplicates
+            const uniqueSongs = removeDuplicates(songs);
+
+            // Ensure exactly 10 songs
+            if (uniqueSongs.length < 10) {
+                alert('The generated playlist contains fewer than 10 unique songs. Please try again.');
+            }
+
+            return uniqueSongs;
+        };
+
         // Receive Message from Model
         const writeMessage = (line) => {
             assistantResponse += line + '\n';
@@ -175,7 +215,14 @@
         const onRunComplete = () => {
             // Remove the last newline character
             assistantResponse = assistantResponse.trim();
-            addMessage("Assistant", assistantResponse);
+
+            // Parse and clean the response
+            const cleanSongs = parseAssistantResponse(assistantResponse);
+
+            // Format the clean list
+            const formattedList = cleanSongs.map(song => `${song.number}. "${song.title}" by ${song.artist} - ${song.duration}`).join('\n');
+
+            addMessage("Assistant", formattedList);
             sendButton.disabled = false;
         };
 
