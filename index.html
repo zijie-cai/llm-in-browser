@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Minimal LLM Chat Interface</title>
+    <title>AI Music Playlist Generator</title>
     <!-- Minimal Styling -->
     <style>
         body {
@@ -60,15 +60,15 @@
 </head>
 <body>
 
-    <h1>LLM Chat Interface</h1>
+    <h1>AI Music Playlist Generator</h1>
 
     <progress id="progress" hidden></progress>
 
     <div id="chatContainer" hidden>
         <div id="messages"></div>
         <div id="inputContainer">
-            <textarea id="userInput" rows="2" placeholder="Type your message here..."></textarea>
-            <button id="sendBtn" disabled>Send</button>
+            <textarea id="userInput" rows="2" placeholder="Describe the kind of playlist you want..."></textarea>
+            <button id="sendBtn" disabled>Generate Playlist</button>
         </div>
     </div>
 
@@ -87,8 +87,8 @@
             name: "Qwen2.5-0.5B-Instruct",
             url: "https://huggingface.co/bartowski/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
             type: "GGUF_CPU",
-            promptStart: "<|im_start|>user\n",
-            promptEnd: "\n<|im_end|>\n<|im_start|>assistant\n"
+            promptStart: "<|im_start|>user\nMake a playlist of 10 songs based on user description: ",
+            promptEnd: ". Only list the songs with a numbered list and artist names without other explanation.\n<|im_end|>\n<|im_start|>assistant\n"
         };
 
         // Load Model Function
@@ -116,7 +116,8 @@
             progress.hidden = true;
             chatContainer.hidden = false;
             sendButton.disabled = false;
-            addMessage("System", "Model loaded. You can start chatting!");
+            addMessage("System", "Model loaded. Describe the kind of playlist you want!");
+            userInput.focus();
         };
 
         // Send Message to Model
@@ -131,7 +132,7 @@
             const prompt = `${modelConfig.promptStart}${text}${modelConfig.promptEnd}`;
             const params = {
                 prompt: prompt,
-                max_token_len: 100,
+                max_token_len: 200,
                 top_k: 1
             };
 
