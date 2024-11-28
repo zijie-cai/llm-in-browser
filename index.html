@@ -1,4 +1,4 @@
-my code <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -17,6 +17,9 @@ my code <!DOCTYPE html>
       <textarea id="descriptionInput" name="descriptionInput" rows="5"></textarea>
       <button id="submitBtn" disabled>Generate Playlist</button>
     </form>
+    <div id="loading" style="display: none;">
+      <p>Generating your playlist...</p>
+    </div>
     <div id="result" style="display: none;">
       <h3>Your Playlist</h3>
       <p id="userDescription"></p>
@@ -33,29 +36,71 @@ my code <!DOCTYPE html>
     const userDescriptionElement = document.getElementById('userDescription');
     const playlistElement = document.getElementById('playlist');
     const resultDiv = document.getElementById('result');
+    const loadingDiv = document.getElementById('loading');
 
     let accumulatedOutput = '';
+
+    // Updated regex to match lines starting with one or more digits, followed by a dot and a space, then "Song Name", Artist
+    const songLineRegex = /^\d+\.\s+".+",\s+.+$/;
 
     const on_loaded = () => {
       submitButton.disabled = false;
     };
 
     const write_result = (line) => {
-      accumulatedOutput += line;
+      accumulatedOutput += line.trim() + '\n'; // Trim whitespace and ensure lines are separated
     };
+
+    let retryCount = 0;
+    const MAX_RETRIES = 2; // Adjust as needed
 
     const run_complete = () => {
       submitButton.disabled = false;
-      resultDiv.style.display = 'block';
+      loadingDiv.style.display = 'none'; // Hide loading
 
-      // Process the accumulated output to extract songs
-      let songs = accumulatedOutput.split('\n').filter(s => s.trim() !== '');
+      // Remove any code block markers if present
+      let cleanedOutput = accumulatedOutput.replace(/```/g, '').trim();
+
+      // Split the cleaned output into lines
+      let lines = cleanedOutput.split('\n');
+
+      // Use regex to filter lines that match the desired format
+      let songs = lines.filter(line => songLineRegex.test(line));
+
+      // Ensure exactly 10 songs
+      if (songs.length < 10) {
+        if (retryCount < MAX_RETRIES) {
+          retryCount++;
+          accumulatedOutput = '';
+          run_model(); // Re-run the model
+          return;
+        } else {
+          alert(`Only ${songs.length} songs were generated after ${MAX_RETRIES} attempts. Please try again.`);
+          resultDiv.style.display = 'none';
+          accumulatedOutput = ''; // Reset for next time
+          return;
+        }
+      }
+
+      // Reset retry count upon successful generation
+      retryCount = 0;
+
+      // If more than 10 songs are generated, take the first 10
+      songs = songs.slice(0, 10);
+
+      // Populate the playlist
       playlistElement.innerHTML = '';
       songs.forEach(song => {
         let li = document.createElement('li');
-        li.textContent = song;
+        li.textContent = song.trim();
         playlistElement.appendChild(li);
       });
+
+      // Display user description
+      userDescriptionElement.textContent = 'Description: ' + descriptionInput.value.trim();
+
+      resultDiv.style.display = 'block';
+
       accumulatedOutput = ''; // Reset for next time
     };
 
@@ -83,10 +128,20 @@ my code <!DOCTYPE html>
       }
       submitButton.disabled = true;
       resultDiv.style.display = 'none';
-      userDescriptionElement.textContent = 'Description: ' + userDescription;
+      loadingDiv.style.display = 'block'; // Show loading
       playlistElement.innerHTML = ''; // Clear previous results
 
-      const prompt = `List 10 song names with their artists based on the description: "${userDescription}". Only list the songs in a numbered format without any extra explanation.`;
+      const prompt = `Generate a playlist of 10 songs based on the following description: "${userDescription}". Provide the songs in a strictly numbered list format, where each item is in the form "1. Song Name, Artist". Ensure that:
+- Each number is a single integer followed by a dot and a space.
+- There are no code blocks (no triple backticks).
+- No additional text, explanations, or summaries are included before or after the list.
+- Each song is on a new line.
+
+**Example:**
+1. "Song One", Artist A
+2. "Song Two", Artist B
+...
+10. "Song Ten", Artist J`;
 
       const params = {
         prompt: prompt,
