@@ -139,8 +139,9 @@
             const prompt = `${modelConfig.promptStart}${text}${modelConfig.promptEnd}`;
             const params = {
                 prompt: prompt,
-                max_token_len: 200,
-                top_k: 1
+                max_token_len: 300,
+                temperature: 0.7
+                top_k: 50
             };
 
             LLMEngine.run(params);
