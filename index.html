@@ -1,4 +1,4 @@
-here is my code, how do  I make sure it is not scrollable : <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -6,6 +6,10 @@ here is my code, how do  I make sure it is not scrollable : <!DOCTYPE html>
     <title>AI Music Playlist Generator</title>
     <!-- Minimal Styling -->
     <style>
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
