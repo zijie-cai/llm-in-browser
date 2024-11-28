@@ -68,7 +68,7 @@
       let songs = lines.filter(line => songLineRegex.test(line));
 
       // Ensure exactly 10 songs
-      if (songs.length < 10) {
+      if (songs.length < 5) {
         if (retryCount < MAX_RETRIES) {
           retryCount++;
           accumulatedOutput = '';
