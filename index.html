@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+my code <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -41,7 +41,7 @@
     };
 
     const write_result = (line) => {
-      accumulatedOutput += line + '\n'; // Ensure lines are separated
+      accumulatedOutput += line;
     };
 
     const run_complete = () => {
@@ -49,22 +49,13 @@
       resultDiv.style.display = 'block';
 
       // Process the accumulated output to extract songs
-      let songs = accumulatedOutput.split('\n').filter(line => {
-        // Use regex to match lines that start with a number followed by a dot
-        return /^\d+\.\s+.+,\s+.+$/.test(line.trim());
-      });
-
+      let songs = accumulatedOutput.split('\n').filter(s => s.trim() !== '');
       playlistElement.innerHTML = '';
       songs.forEach(song => {
         let li = document.createElement('li');
-        li.textContent = song.trim();
+        li.textContent = song;
         playlistElement.appendChild(li);
       });
-      
-      if (songs.length === 0) {
-        playlistElement.innerHTML = '<li>No songs were generated. Please try again.</li>';
-      }
-
       accumulatedOutput = ''; // Reset for next time
     };
 
@@ -95,7 +86,7 @@
       userDescriptionElement.textContent = 'Description: ' + userDescription;
       playlistElement.innerHTML = ''; // Clear previous results
 
-      const prompt = `Generate a playlist of 10 songs based on the following description: "${userDescription}". Provide the songs in a numbered list format, where each item is in the form "1. Song Name, Artist". Do not include any additional text or explanations.`;
+      const prompt = `Name 10 songs related to the description: "${userDescription}".`;
 
       const params = {
         prompt: prompt,
