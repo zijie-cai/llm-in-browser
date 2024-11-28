@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Music Playlist Generator_c</title>
+    <title>AI Music Playlist Generator</title>
     <!-- Minimal Styling -->
     <style>
         body {
@@ -91,7 +91,7 @@
             name: "Qwen2.5-0.5B-Instruct",
             url: "https://huggingface.co/bartowski/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
             type: "GGUF_CPU",
-            promptStart: "<|im_start|>user\nMake a playlist of 10 unique songs based on the following description: ",
+            promptStart: "<|im_start|>user\nMake a playlist of 20 unique songs based on the following description: ",
             promptEnd: ". Provide only a numbered list with each entry in the format 'number. \"Song Title\" by Artist Name - Duration'. Ensure there are no duplicate songs and maintain consistent formatting.\n<|im_end|>\n<|im_start|>assistant\n"
         };
 
@@ -139,7 +139,7 @@
             const prompt = `${modelConfig.promptStart}${text}${modelConfig.promptEnd}`;
             const params = {
                 prompt: prompt,
-                max_token_len: 300, // Increased token length
+                max_token_len: 500, // Increased token length
                 temperature: 0.7,    // Increased temperature
                 top_k: 50            // Adjusted top_k
             };
