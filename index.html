@@ -167,14 +167,20 @@
             return div.innerHTML;
         };
 
-        // Receive Message from Model
         const writeMessage = (line) => {
-            assistantResponse += line + '\n';
+            // Accumulate assistant's response without raw prompt text
+            if (!line.startsWith("user") && !line.startsWith("assistant")) {
+                assistantResponse += line + '\n';
+            }
         };
-
+        
         const onRunComplete = () => {
-            // Remove the last newline character
-            assistantResponse = assistantResponse.trim();
+            // Trim and clean the final assistant response
+            assistantResponse = assistantResponse
+                .replace(/<\|im_start\|>user.*?<\|im_end\|>/gs, '') // Remove the entire user prompt block
+                .replace(/assistant\s*:/i, '') // Remove "assistant:" if it appears
+                .trim();
+            
             addMessage("Assistant", assistantResponse);
             sendButton.disabled = false;
         };
