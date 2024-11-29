@@ -164,7 +164,7 @@
     </div>
 
     <script type="module">
-        import { LLM } from "./llm.js/llm.js"; // Ensure the path is correct
+        import { LLM } from "./llm.js"; // Ensure the path is correct
 
         let LLMEngine;
         const sendButton = document.getElementById('sendBtn');
@@ -181,8 +181,8 @@
             name: "Qwen2.5-0.5B-Instruct",
             url: "https://huggingface.co/bartowski/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
             type: "GGUF_CPU",
-            promptStart: "<|im_start|>user\nMake a playlist of 10 songs based on user description: ",
-            promptEnd: ". Only list the songs with a numbered list and artist names without other explanation.\n<|im_end|>\n<|im_start|>assistant\n"
+            promptStart: "<|im_start|>user\nCreate an eclectic playlist of 10 unique songs based on the following description: ",
+            promptEnd: ". Please provide only the song titles and artist names in a numbered list, avoiding any additional explanations.\n<|im_end|>\n<|im_start|>assistant\n"
         };
 
         // Load Model Function
@@ -226,10 +226,14 @@
             assistantResponse = '';
 
             const prompt = `${modelConfig.promptStart}${text}${modelConfig.promptEnd}`;
+            
+            // Updated parameters for more randomness
             const params = {
                 prompt: prompt,
                 max_token_len: 250,
-                top_k: 1
+                top_k: 40, // Increased from 1 to 40 for more token options
+                temperature: 0.7, // Added temperature for randomness
+                top_p: 0.9 // Optional: Add top_p for nucleus sampling
             };
 
             LLMEngine.run(params);
@@ -266,7 +270,7 @@
         const onRunComplete = () => {
             // Trim and clean the final assistant response
             assistantResponse = assistantResponse
-                .replace(/^.*Make a playlist of 10 songs based on user description:.*?explanation\.\n*/i, '') // Remove the introductory text
+                .replace(/^.*Create an eclectic playlist of 10 unique songs based on the following description:.*?explanation\.\n*/i, '') // Remove the introductory text
                 .trim();
             
             addMessage("Assistant", assistantResponse);
